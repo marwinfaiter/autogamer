@@ -28,7 +28,7 @@ class Module:
         self.color = color
 
     def available(self, image):
-        # pyautogui.moveTo(1603 + self.x, 245 + self.y)
+        # pyautogui.moveTo(1603 + self.x, 369 + self.y)
         return image.getpixel((self.x, self.y)) in self.color
 
 
@@ -64,11 +64,16 @@ class Temple(Module):
     def __init__(self):
         super().__init__(77, 410, [(255,255,255)])
 
+class WizardTower(Module):
+    def __init__(self):
+        super().__init__(73, 470, [(255,255,255)])
+
 
 if __name__ == "__main__":
     pyautogui.PAUSE = 0.01
     helpers = Modules(1603, 369, 1902, 975,
         [
+            WizardTower(),
             Temple(),
             Bank(),
             Factory(),
