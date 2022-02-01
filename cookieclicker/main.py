@@ -1,4 +1,5 @@
 import pyautogui
+import keyboard
 
 class Modules:
     def __init__(self, start_x, start_y, end_x, end_y, modules):
@@ -88,9 +89,7 @@ if __name__ == "__main__":
             FirstUpgrade()
         ]
     )
-    for i in range(100):
-        for click in range(1000):
-            pyautogui.click(300, 480)
+    while True:
         while True:
             upgrade = upgrades.get_best_available_module()
             if upgrade:
@@ -102,3 +101,10 @@ if __name__ == "__main__":
                 continue
 
             break
+        for click in range(10000):
+            print(f"click number: {click}", end="\r")
+            if keyboard.is_pressed("b"):
+                break
+            if keyboard.is_pressed("q"):
+                raise KeyboardInterrupt("User ended the app!")
+            pyautogui.click(300, 480)
