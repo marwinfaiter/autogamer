@@ -1,5 +1,7 @@
 import pyautogui
+from PIL import ImageGrab
 import keyboard
+import time
 
 class Modules:
     def __init__(self, start_x, start_y, end_x, end_y, modules):
@@ -14,79 +16,74 @@ class Modules:
         return (self.start_x, self.start_y, self.end_x, self.end_y)
 
     def get_best_available_module(self):
-        image = pyautogui.screenshot(region=self.coordinates)
+        image = ImageGrab.grab(bbox=self.coordinates)
         for module in self.modules:
-            if module.available(image):
-                return module
+            module_points = module.available(image)
+            if module_points:
+                return module_points.pop()
 
     def add_module(self, module):
-        pyautogui.click(self.start_x + module.x, self.start_y + module.y)
+        pyautogui.click(self.start_x + module[0], self.start_y + module[1])
 
 class Module:
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, x_increment=None, y_increment=None, color=None, minimum_red=None, minimum_green=None, minimum_blue=None):
         self.x = x
         self.y = y
+        self.x_increment = x_increment
+        self.y_increment = y_increment
         self.color = color
+        self.minimum_red=minimum_red
+        self.minimum_green=minimum_green
+        self.minimum_blue=minimum_blue
 
     def available(self, image):
         # pyautogui.moveTo(1603 + self.x, 369 + self.y)
-        return image.getpixel((self.x, self.y)) in self.color
+        width, height = image.size
+        available = []
+        if self.x_increment is not None:
+            x_to_check = range(self.x, width, self.x_increment)
+        else:
+            x_to_check = [self.x]
+        if self.y_increment is not None:
+            y_to_check = range(self.y, height, self.y_increment)
+        else:
+            y_to_check = [self.y]
+
+        for x in x_to_check:
+            for y in y_to_check:
+                red, green, blue = image.getpixel((x, y))
+                if self.color and (red, green, blue) not in self.color:
+                    continue
+                if self.minimum_red and red < self.minimum_red:
+                    continue
+                if self.minimum_green and red < self.minimum_green:
+                    continue
+                if self.minimum_blue and red < self.minimum_blue:
+                    continue
+
+                available.append((x,y))
+
+        return available
 
 
 class FirstUpgrade(Module):
     def __init__(self):
-        super().__init__(30, 72, [(144,71,17),(255,254,248)])
+        super().__init__(2, 2, minimum_red=160)
 
-class Cursor(Module):
+class Helper(Module):
     def __init__(self):
-        super().__init__(71, 24, [(255,255,255)])
-
-class Grandma(Module):
-    def __init__(self):
-        super().__init__(71, 84, [(255,255,255)])
-
-class Farm(Module):
-    def __init__(self):
-        super().__init__(73, 150, [(255,255,255)])
-
-class Mine(Module):
-    def __init__(self):
-        super().__init__(71, 224, [(255,255,255)])
-
-class Factory(Module):
-    def __init__(self):
-        super().__init__(73, 280, [(255,255,255)])
-
-class Bank(Module):
-    def __init__(self):
-        super().__init__(73, 350, [(255,255,255)])
-
-class Temple(Module):
-    def __init__(self):
-        super().__init__(77, 410, [(255,255,255)])
-
-class WizardTower(Module):
-    def __init__(self):
-        super().__init__(73, 470, [(255,255,255)])
-
+        super().__init__(65, 24, y_increment=63, minimum_red=150)
 
 if __name__ == "__main__":
     pyautogui.PAUSE = 0.01
-    helpers = Modules(1603, 369, 1902, 975,
-        [
-            WizardTower(),
-            Temple(),
-            Bank(),
-            Factory(),
-            Mine(),
-            Farm(),
-            Grandma(),
-            Cursor(),
-        ]
-    )
-    upgrades = Modules(1603, 245, 1902, 380,
+    upgrades = Modules(1603, 260, 1902, 320,
         [
             FirstUpgrade()
+        ]
+    )
+    helpers = Modules(1603, 369, 1902, 975,
+        [
+            Helper()
         ]
     )
     while True:
